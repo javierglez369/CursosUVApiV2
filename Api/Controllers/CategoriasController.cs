@@ -40,15 +40,14 @@ public class CategoriasController(IRepository<Categoria> repository,
     [HttpPost]    
     public async Task<IActionResult> Post([FromBody] CreateCategoriaDto categoriaDto,CancellationToken cancellationToken)
     {
-        //var categoria = mapper.Map<Categoria>(categoriaDto);
+        
         var categoria = categoriaFactoria.ToEntity(categoriaDto);
 
         if (ModelState.IsValid)
         {
             await repository.AddAsync(categoria);
             await repository.SaveChangesAsync(cancellationToken);
-
-            //var categoriaCreadaDto = mapper.Map<CategoriaDto>(categoria);
+        
             var categoriaCreadaDto = categoriaFactoria.ToDto(categoria);
 
             return CreatedAtAction(nameof(GetById), new { id = categoriaCreadaDto.Id }, categoriaCreadaDto);        

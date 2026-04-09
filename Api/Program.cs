@@ -1,3 +1,4 @@
+using Api.Extensions;
 using Application;
 using Persistence;
 using Scalar.AspNetCore;
@@ -33,5 +34,10 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+var cadena = "hola mundo";
+var cadenaMayusculas = cadena.AMayusculas();
+
+
 
 app.Run();
