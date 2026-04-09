@@ -1,54 +1,52 @@
-﻿using Application.DTOs;
+﻿using Application.Common.Models;
+using Application.DTOs;
 using Application.Interfaces;
 using Application.Mappings;
-using AutoMapper;
 using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
 
-[Route("api/[controller]")]
-[ApiController]
-public class CategoriasController(IRepository<Categoria> repository,
-    IMapper mapper,
-    CategoriaFactoria categoriaFactoria) : ControllerBase
+public class CategoriasController(IUnitOfWork uow) : BaseApiController
 {
+    private readonly IRepository<Categoria> repository=uow.Repository<Categoria>();
 
     [HttpGet]
-    public async Task<IActionResult> Get()
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<CategoriaDto>>),200)]
+    public async Task<ActionResult<ApiResponse<IEnumerable<CategoriaDto>>>> Get()
     {
-        var categorias = await repository.GetAllAsync();
-        var categoriasDto = categoriaFactoria.ToDtos(categorias);
-        //var categoriasDto = mapper.Map<IEnumerable<CategoriaDto>>(categorias);
-        return Ok(categoriasDto);
+        var categorias = await uow.Repository<Categoria>().GetAllAsync();
+        var categoriasDto = categorias.Select(c=>c.ToDto());        
+        return Success(categoriasDto);
     }
 
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetById(int id)
+    [ProducesResponseType(typeof(ApiResponse<CategoriaDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
+    public async Task<ActionResult<ApiResponse<CategoriaDto>>> GetById(int id)
     {
         var categoria = await repository.GetByIdAsync(id);
 
         if (categoria is null)
             return NotFound(new { mensaje = $"Categoría con {id} no encontrada" });
+        
+        var categoriaDto = categoria.ToDto();
 
-        //var categoriaDto = mapper.Map<CategoriaDto>(categoria);
-        var categoriaDto = categoriaFactoria.ToDto(categoria);
-
-        return Ok(categoriaDto);
+        return Success(categoriaDto);
     }
 
     [HttpPost]    
     public async Task<IActionResult> Post([FromBody] CreateCategoriaDto categoriaDto,CancellationToken cancellationToken)
     {
         
-        var categoria = categoriaFactoria.ToEntity(categoriaDto);
+        var categoria = categoriaDto.ToEntity();
 
         if (ModelState.IsValid)
         {
             await repository.AddAsync(categoria);
-            await repository.SaveChangesAsync(cancellationToken);
-        
-            var categoriaCreadaDto = categoriaFactoria.ToDto(categoria);
+            await uow.SaveChangesAsync();
+
+            var categoriaCreadaDto = categoria.ToDto();
 
             return CreatedAtAction(nameof(GetById), new { id = categoriaCreadaDto.Id }, categoriaCreadaDto);        
         }
@@ -59,18 +57,21 @@ public class CategoriasController(IRepository<Categoria> repository,
     public async Task<IActionResult> Put(int id, UpdateCategoriaDto categoriaDto,
         CancellationToken cancellationToken)
     {
-        var existeCategoria = await repository.ExistsAsync(id,cancellationToken);
-        if (!existeCategoria)
-            return NotFound();
-                
-        var categoriaBd = await repository.GetByIdAsync(id);        
-
-        categoriaBd!.Nombre = categoriaDto.Nombre;
-        categoriaBd.Descripcion = categoriaDto.Descripcion;
         
-        repository.Update(categoriaBd);
-        await repository.SaveChangesAsync(cancellationToken);
-        return NoContent();
+            var existeCategoria = await repository.ExistsAsync(id, cancellationToken);
+            if (!existeCategoria)
+                return NotFound();
+
+            var categoria = await repository.GetByIdAsync(id, cancellationToken);
+
+            if (categoria is null)
+                return NotFound();
+
+            categoria.ApplyUpdate(categoriaDto);
+
+            repository.Update(categoria);
+            await uow.SaveChangesAsync();
+            return NoContent();        
     }
 
     
@@ -82,7 +83,7 @@ public class CategoriasController(IRepository<Categoria> repository,
             return NotFound();
 
         await repository.DeleteAsync(id);
-        await repository.SaveChangesAsync(cancelationToken);
+        await uow.SaveChangesAsync();
         return NoContent();
     }
     

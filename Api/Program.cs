@@ -1,4 +1,5 @@
 using Api.Extensions;
+using Api.Middleware;
 using Application;
 using Persistence;
 using Scalar.AspNetCore;
@@ -15,6 +16,7 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+app.UseMiddleware<ExceptionMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

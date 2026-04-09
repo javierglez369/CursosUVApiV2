@@ -37,7 +37,5 @@ public interface IRepository<T> where T : BaseEntity
     void UpdateRange(IEnumerable<T> entities);
     Task DeleteAsync(int id, CancellationToken cancellationToken = default);
     Task DeleteRangeAsync(IEnumerable<int> ids, CancellationToken cancellationToken = default);
-
-    // ── PERSISTENCIA ─────────────────────────────────────────────
-    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+ 
 }

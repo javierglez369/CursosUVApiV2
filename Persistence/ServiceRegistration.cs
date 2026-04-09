@@ -19,8 +19,7 @@ public static class ServiceRegistration
                 configuration.GetConnectionString("DefaultConnection")
         ));
 
-        //services.AddScoped<ICategoriaRepository, CategoriaRepository>();
-        services.AddScoped(typeof(IRepository<>),typeof(Repository<>));
+        services.AddScoped<IUnitOfWork, UnitOfWork>();  
 
         return services;
     }

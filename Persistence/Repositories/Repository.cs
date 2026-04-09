@@ -1,4 +1,5 @@
-﻿using Application.Interfaces;
+﻿using Application.Common.Models;
+using Application.Interfaces;
 using Persistence.Contexts;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -51,67 +52,67 @@ public class Repository<T>(ApplicationDbContext context) : IRepository<T>
                        .Where(predicate)
                        .ToListAsync(cancellationToken);
 
-    //public async Task<PagedResult<T>> GetPagedAsync(
-    //    QueryParameters parameters,
-    //    CancellationToken cancellationToken = default)
-    //{
-    //    IQueryable<T> query = _dbSet.AsNoTracking();
+    public async Task<PagedResult<T>> GetPagedAsync(
+        QueryParameters parameters,
+        CancellationToken cancellationToken = default)
+    {
+        IQueryable<T> query = _dbSet.AsNoTracking();
 
-    //    // 1. INCLUDES dinámicos desde strings (ej: ["Instructor", "Categoria"])
-    //    foreach (var include in parameters.Includes)
-    //        query = query.Include(include);
+        // 1. INCLUDES dinámicos desde strings (ej: ["Instructor", "Categoria"])
+        foreach (var include in parameters.Includes)
+            query = query.Include(include);
 
-    //    // 2. BÚSQUEDA en múltiples campos de texto
-    //    if (!string.IsNullOrWhiteSpace(parameters.SearchTerm)
-    //        && parameters.SearchFields.Length > 0)
-    //    {
-    //        var term = parameters.SearchTerm.ToLower();
+        // 2. BÚSQUEDA en múltiples campos de texto
+        if (!string.IsNullOrWhiteSpace(parameters.SearchTerm)
+            && parameters.SearchFields.Length > 0)
+        {
+            var term = parameters.SearchTerm.ToLower();
 
-    //        // Construimos un predicado OR sobre los campos de búsqueda
-    //        // Usamos reflexión para acceder a las propiedades por nombre
-    //        var predicate = parameters.SearchFields
-    //            .Select(field => BuildContainsPredicate(field, term))
-    //            .Where(p => p is not null)
-    //            .Cast<Expression<Func<T, bool>>>()
-    //            .Aggregate((acc, next) => CombineOr(acc, next));
+            // Construimos un predicado OR sobre los campos de búsqueda
+            // Usamos reflexión para acceder a las propiedades por nombre
+            var predicate = parameters.SearchFields
+                .Select(field => BuildContainsPredicate(field, term))
+                .Where(p => p is not null)
+                .Cast<Expression<Func<T, bool>>>()
+                .Aggregate((acc, next) => CombineOr(acc, next));
 
-    //        query = query.Where(predicate);
-    //    }
+            query = query.Where(predicate);
+        }
 
-    //    // 3. CONTEO total (antes de paginar)
-    //    var totalRecords = await query.CountAsync(cancellationToken);
+        // 3. CONTEO total (antes de paginar)
+        var totalRecords = await query.CountAsync(cancellationToken);
 
-    //    // 4. ORDENAMIENTO dinámico usando reflexión
-    //    if (!string.IsNullOrWhiteSpace(parameters.OrderBy))
-    //    {
-    //        var prop = typeof(T).GetProperty(
-    //            parameters.OrderBy,
-    //            BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+        // 4. ORDENAMIENTO dinámico usando reflexión
+        if (!string.IsNullOrWhiteSpace(parameters.OrderBy))
+        {
+            var prop = typeof(T).GetProperty(
+                parameters.OrderBy,
+                BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
 
-    //        if (prop is not null)
-    //        {
-    //            // Construye: x => x.Propiedad
-    //            var param = Expression.Parameter(typeof(T), "x");
-    //            var body = Expression.Property(param, prop);
-    //            var keySelector = Expression.Lambda(body, param);
+            if (prop is not null)
+            {
+                // Construye: x => x.Propiedad
+                var param = Expression.Parameter(typeof(T), "x");
+                var body = Expression.Property(param, prop);
+                var keySelector = Expression.Lambda(body, param);
 
-    //            // C# 13 — switch expression para dirección de ordenamiento
-    //            query = parameters.OrderDirection?.ToLower() switch
-    //            {
-    //                "desc" => Queryable.OrderByDescending(query, (dynamic)keySelector),
-    //                _ => Queryable.OrderBy(query, (dynamic)keySelector)
-    //            };
-    //        }
-    //    }
+                // C# 13 — switch expression para dirección de ordenamiento
+                query = parameters.OrderDirection?.ToLower() switch
+                {
+                    "desc" => Queryable.OrderByDescending(query, (dynamic)keySelector),
+                    _ => Queryable.OrderBy(query, (dynamic)keySelector)
+                };
+            }
+        }
 
-    //    // 5. PAGINACIÓN con Skip / Take
-    //    var data = await query
-    //        .Skip((parameters.PageNumber - 1) * parameters.PageSize)
-    //        .Take(parameters.PageSize)
-    //        .ToListAsync(cancellationToken);
+        // 5. PAGINACIÓN con Skip / Take
+        var data = await query
+            .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+            .Take(parameters.PageSize)
+            .ToListAsync(cancellationToken);
 
-    //    return new PagedResult<T>(data, totalRecords, parameters.PageNumber, parameters.PageSize);
-    //}
+        return new PagedResult<T>(data, totalRecords, parameters.PageNumber, parameters.PageSize);
+    }
 
     // ── UTILIDADES ────────────────────────────────────────────────
 
@@ -169,9 +170,6 @@ public class Repository<T>(ApplicationDbContext context) : IRepository<T>
         _dbSet.RemoveRange(entities);
     }
 
-    public async Task<int> SaveChangesAsync(
-        CancellationToken cancellationToken = default)
-        => await _context.SaveChangesAsync(cancellationToken);
 
     // ── HELPERS PRIVADOS ──────────────────────────────────────────
 

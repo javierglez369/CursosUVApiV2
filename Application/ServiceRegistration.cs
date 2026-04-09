@@ -9,8 +9,7 @@ public static class ServiceRegistration
 
         //Escanear los perfiles de Automapper
         services.AddAutoMapper(cfg => { }, typeof(MappingProfile));
-
-        services.AddSingleton<CategoriaFactoria>();
+    
 
         return services;
     }
