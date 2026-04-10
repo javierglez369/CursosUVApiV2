@@ -1,4 +1,6 @@
-﻿using Application.Mappings;
+﻿using Application.Interfaces;
+using Application.Mappings;
+using Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Application;
@@ -10,7 +12,9 @@ public static class ServiceRegistration
         //Escanear los perfiles de Automapper
         services.AddAutoMapper(cfg => { }, typeof(MappingProfile));
     
+        services.AddScoped<ICategoriaService, CategoriaService>();
 
         return services;
     }
+
 }

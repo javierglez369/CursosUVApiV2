@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Application.Common.Models;
+using Domain.Entities;
 using System.Linq.Expressions;
 
 namespace Application.Interfaces;
@@ -19,9 +20,9 @@ public interface IRepository<T> where T : BaseEntity
         Expression<Func<T, bool>> predicate,
         CancellationToken cancellationToken = default);
 
-    //Task<PagedResult<T>> GetPagedAsync(
-    //    QueryParameters parameters,
-    //    CancellationToken cancellationToken = default);
+    Task<PagedResult<T>> GetPagedAsync(
+        QueryParameters parameters,
+        CancellationToken cancellationToken = default);
 
     // ── UTILIDADES ────────────────────────────────────────────────
     Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default);
