@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace API.Attributes;
+namespace Api.Attributes;
 
 /// <summary>
 /// Filtro de acción genérico que valida el parámetro de tipo <typeparamref name="TDto"/>

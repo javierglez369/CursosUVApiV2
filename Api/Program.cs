@@ -11,10 +11,15 @@ builder.Services.AddPersistenceServices(builder.Configuration);
 builder.Services.AddApplicationServices();
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
+// Agregar OpenAPI y documentación
+builder.Services.AddOpenApiDocumentation(builder.Configuration);
+
+// Agregar CORS
+builder.Services.AddCorsConfiguration(builder.Configuration);
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+//builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
@@ -22,24 +27,18 @@ await app.SeedRolesAsync();
 
 app.UseMiddleware<ExceptionMiddleware>();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-    app.MapScalarApiReference(options =>
-    {
-        options.Title = "CursosUV API";
-        options.DefaultFonts = false;
-    });
-}
-
-app.MapGet("/", () => Results.Redirect("/scalar/v1")).ExcludeFromDescription();
 
 app.UseHttpsRedirection();
 
+// ✅ Aplicar CORS
+app.UseCorsConfiguration(app.Environment);
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseOpenApiDocumentation(builder.Configuration);
 
 var cadena = "hola mundo";
 var cadenaMayusculas = cadena.AMayusculas();

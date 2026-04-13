@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Persistence.Contexts;
 using Persistence.Repositories;
+using Persistence.Services;
 
 namespace Persistence;
 
@@ -22,6 +23,14 @@ public static class ServiceRegistration
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+        // AuthService requiere ApplicationDbContext, IConfiguration, UserManager e IUnitOfWork
+        services.AddScoped<IAuthService>(provider =>
+            new AuthService(
+                provider.GetRequiredService<ApplicationDbContext>(),
+                configuration,
+                provider.GetRequiredService<UserManager<ApplicationUser>>(),
+                provider.GetRequiredService<IUnitOfWork>()));
+
         // ── Identity (solo el core — sin JWT, sin middleware HTTP) ─────────
         services.AddIdentityCore<ApplicationUser>(options =>
         {
@@ -34,6 +43,8 @@ public static class ServiceRegistration
         })
         .AddRoles<IdentityRole>()
         .AddEntityFrameworkStores<ApplicationDbContext>();
+
+
 
         return services;
     }

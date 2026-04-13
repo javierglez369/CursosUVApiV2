@@ -1,4 +1,4 @@
-﻿using API.Attributes;
+﻿using Api.Attributes;
 using Application.Common.Models;
 using Application.DTOs;
 using Application.Interfaces;
@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
+
+[Authorize(Roles = "Administrador,Estudiante")]
 
 public class CategoriasController(ICategoriaService categoriaService) : BaseApiController
 {    
