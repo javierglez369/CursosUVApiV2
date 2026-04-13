@@ -1,7 +1,9 @@
-﻿namespace Persistence.Contexts;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+
+namespace Persistence.Contexts;
 
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-    :DbContext(options)
+    :IdentityDbContext<ApplicationUser>(options)
 {
     public DbSet<Categoria> Categorias => Set<Categoria>();
     public DbSet<Instructor> Instructores => Set<Instructor>();
@@ -12,7 +14,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Inscripcion> Inscripciones => Set<Inscripcion>();
     public DbSet<Progreso> Progresos => Set<Progreso>();
     public DbSet<Resena> Resenas => Set<Resena>();
-    
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

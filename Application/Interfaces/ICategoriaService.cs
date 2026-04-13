@@ -10,6 +10,10 @@ public interface ICategoriaService
         bool soloActivas=true,
         CancellationToken cancellationToken = default);
 
+    Task<CategoriaConCursosDto?> GetByIdConCursosAsync(
+        int id,
+        CancellationToken cancellationToken = default);
+
     Task<PagedResult<CategoriaDto>> GetPagedAsync(
         QueryParameters parameters,        
         CancellationToken cancellationToken = default);
@@ -17,6 +21,14 @@ public interface ICategoriaService
     Task<CategoriaDto?> GetByIdAsync(
         int id, 
         CancellationToken cancellationToken = default);
+    
+    Task<IEnumerable<CategoriaDto>> BuscarPorNombreAsync(
+            string termino,
+            CancellationToken cancellationToken = default);
+
+    Task<CategoriaExisteDto> ExistePorNombreAsync(
+            string nombre,
+            CancellationToken cancellationToken = default);
 
 
     //Escritura

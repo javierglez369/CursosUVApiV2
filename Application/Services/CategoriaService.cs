@@ -41,6 +41,75 @@ public class CategoriaService
 
     }
 
+    public async Task<CategoriaConCursosDto?> GetByIdConCursosAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug(
+            "Buscando categoría {CategoriaId} con cursos", id);
+
+        // Carga la navegación Cursos en la misma query — sin lazy loading
+        var categoria = await uow.Repository<Categoria>()
+            .GetByIdAsync(id, c => c.Cursos);
+
+        return categoria?.ToDtoConCursos();
+    }
+
+    public async Task<IEnumerable<CategoriaDto>> BuscarPorNombreAsync(
+    string termino,
+    CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(termino))
+        {
+            // Término vacío → devuelve todo en lugar de lanzar excepción
+            // El controlador puede preferir este comportamiento para autocompletados
+            logger.LogDebug("BuscarPorNombre llamado sin término — devolviendo todas");
+            return await GetAllAsync(cancellationToken: cancellationToken);
+        }
+
+        var terminoNormalizado = termino.Trim().ToLower();
+
+        logger.LogDebug(
+            "Buscando categorías con término '{Termino}'", terminoNormalizado);
+
+        var categorias = await uow.Repository<Categoria>()
+            .FindAsync(
+                c => c.Nombre.ToLower().Contains(terminoNormalizado),
+                cancellationToken);
+
+        // Ordenar por nombre en memoria — el conjunto ya está filtrado y es pequeño
+        var resultado = categorias
+            .OrderBy(c => c.Nombre)
+            .ToDtoList();
+
+        logger.LogDebug(
+            "Búsqueda '{Termino}' → {Total} resultado(s)",
+            terminoNormalizado,
+            resultado.Count());
+
+        return resultado;
+    }
+
+
+
+    public async Task<CategoriaExisteDto> ExistePorNombreAsync(
+        string nombre,
+        CancellationToken cancellationToken = default)
+    {
+        var nombreNormalizado = nombre.Trim().ToLower();
+
+        var categorias = await uow.Repository<Categoria>()
+            .FindAsync(
+                c => c.Nombre.ToLower() == nombreNormalizado,
+                cancellationToken);
+
+        var categoria = categorias.FirstOrDefault();
+
+        return categoria is not null
+            ? new CategoriaExisteDto(true, categoria.Id, categoria.Nombre)
+            : new CategoriaExisteDto(false, null, null);
+    }
+
     public async Task<PagedResult<CategoriaDto>> GetPagedAsync(QueryParameters parameters, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Obteniendo categorías paginadas: soloActivas");

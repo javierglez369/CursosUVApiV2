@@ -1,6 +1,8 @@
 ﻿using Application.Interfaces;
 using Application.Mappings;
 using Application.Services;
+using Application.Validators;
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Application;
@@ -13,6 +15,8 @@ public static class ServiceRegistration
         services.AddAutoMapper(cfg => { }, typeof(MappingProfile));
     
         services.AddScoped<ICategoriaService, CategoriaService>();
+
+        services.AddValidatorsFromAssemblyContaining<CreateCategoriaDtoValidator>();
 
         return services;
     }
